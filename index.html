@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIM Warga RT — Sistem Informasi Warga & Kas Lingkungan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center font-bold text-lg">RT</div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight">SIM Warga Lingkungan</h1>
+          <p class="text-xs text-emerald-100">Pendataan Warga, Kas & Layanan Surat</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="modeBadge" class="text-xs px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-100 border border-amber-300/30">
+          Mode Lokal (Demo)
+        </span>
+        <button id="btnAdminToggle" onclick="toggleAdminModal()"
+          class="text-xs sm:text-sm bg-white text-emerald-800 hover:bg-emerald-50 font-semibold px-3 py-1.5 rounded-lg transition">
+          Login Pengurus
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-emerald-800/80 border-t border-emerald-600/50">
+      <div class="max-w-6xl mx-auto px-4 flex overflow-x-auto gap-1 text-sm">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab active-tab px-4 py-2.5 font-medium whitespace-nowrap">
+          Dashboard
+        </button>
+        <button onclick="switchTab('warga')" id="tab-warga" class="nav-tab px-4 py-2.5 font-medium whitespace-nowrap">
+          Data Warga
+        </button>
+        <button onclick="switchTab('kas')" id="tab-kas" class="nav-tab px-4 py-2.5 font-medium whitespace-nowrap">
+          Iuran Kas
+        </button>
+        <button onclick="switchTab('surat')" id="tab-surat" class="nav-tab px-4 py-2.5 font-medium whitespace-nowrap">
+          Layanan Surat
+        </button>
+        <button onclick="switchTab('pengaturan')" id="tab-pengaturan" class="nav-tab px-4 py-2.5 font-medium whitespace-nowrap">
+          Koneksi Cloud
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-1">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-lg"></div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="view-dashboard" class="tab-view space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total Warga Terdata</p>
+          <p id="statTotalWarga" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+          <p id="statStatusWarga" class="text-xs text-slate-500 mt-2">0 Tetap • 0 Kontrak</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total Kas Masuk</p>
+          <p id="statTotalKas" class="text-3xl font-bold text-emerald-700 mt-1">Rp 0</p>
+          <p id="statKasLunas" class="text-xs text-slate-500 mt-2">0 transaksi tercatat</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Pengajuan Surat</p>
+          <p id="statTotalSurat" class="text-3xl font-bold text-amber-600 mt-1">0</p>
+          <p id="statSuratPending" class="text-xs text-slate-500 mt-2">0 menunggu proses</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Status Akses</p>
+          <p id="statRoleText" class="text-xl font-bold text-slate-800 mt-1">Mode Warga</p>
+          <p class="text-xs text-slate-500 mt-2">Login pengurus untuk edit/hapus</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Recent Activity -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h2 class="font-bold text-slate-800 mb-3">Akses Cepat Layanan</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button onclick="switchTab('surat')" class="p-4 text-left rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition">
+              <p class="font-semibold text-emerald-900 text-sm">+ Ajukan Surat Pengantar</p>
+              <p class="text-xs text-emerald-700 mt-1">Domisili, SKTM, pengantar KTP/KK</p>
+            </button>
+            <button onclick="switchTab('kas')" class="p-4 text-left rounded-xl border border-sky-200 bg-sky-50/60 hover:bg-sky-100/70 transition">
+              <p class="font-semibold text-sky-900 text-sm">Cek Status Iuran Kas</p>
+              <p class="text-xs text-sky-700 mt-1">Rekap pembayaran iuran bulanan</p>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h2 class="font-bold text-slate-800 mb-3">Pengajuan Surat Terbaru</h2>
+          <div id="recentSuratList" class="space-y-2.5 text-sm text-slate-600">
+            <p class="text-slate-400 text-xs">Belum ada pengajuan surat.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: DATA WARGA -->
+    <section id="view-warga" class="tab-view hidden space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Direktori Data Warga</h2>
+          <p class="text-xs text-slate-500">NIK disamarkan otomatis untuk tampilan publik (non-pengurus).</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <input type="text" id="searchWarga" oninput="renderWarga()" placeholder="Cari nama / blok rumah..."
+            class="px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          <button onclick="openWargaForm()" class="admin-only hidden bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded-lg">
+            + Tambah Warga
+          </button>
+        </div>
+      </div>
+
+      <!-- Form Warga (Admin Only) -->
+      <div id="wargaFormBox" class="hidden bg-white p-5 rounded-xl border border-emerald-200 shadow-sm">
+        <h3 id="wargaFormTitle" class="font-bold text-slate-800 mb-3">Tambah Data Warga</h3>
+        <form id="formWarga" onsubmit="saveWarga(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+          <input type="hidden" id="wargaId" />
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">NIK (16 Digit) *</label>
+            <input type="text" id="wargaNik" maxlength="16" required placeholder="3275xxxxxxxxxxxx"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Nama Lengkap *</label>
+            <input type="text" id="wargaNama" required placeholder="Nama Kepala / Anggota Keluarga"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Alamat / Blok & No. Rumah *</label>
+            <input type="text" id="wargaAlamat" required placeholder="Blok A2 No. 10"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">No. HP / WhatsApp</label>
+            <input type="text" id="wargaHp" placeholder="0812xxxxxxxx"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Status Tinggal</label>
+            <select id="wargaStatus" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
+              <option value="Tetap">Warga Tetap</option>
+              <option value="Kontrak">Warga Kontrak / Kos</option>
+            </select>
+          </div>
+          <div class="flex items-end gap-2">
+            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-4 py-2 rounded-lg">Simpan</button>
+            <button type="button" onclick="closeWargaForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg">Batal</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabel Warga -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+            <tr>
+              <th class="px-4 py-3">NIK</th>
+              <th class="px-4 py-3">Nama Lengkap</th>
+              <th class="px-4 py-3">Alamat / Blok</th>
+              <th class="px-4 py-3">No. HP</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 admin-only hidden">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyWarga" class="divide-y divide-slate-200"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: IURAN KAS -->
+    <section id="view-kas" class="tab-view hidden space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Pencatatan Iuran Kas Warga</h2>
+          <p class="text-xs text-slate-500">Transparansi pemasukan iuran kebersihan, keamanan, dan kas RT.</p>
+        </div>
+        <button onclick="openKasForm()" class="admin-only hidden bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded-lg">
+          + Catat Pembayaran Kas
+        </button>
+      </div>
+
+      <!-- Form Catat Kas (Admin Only) -->
+      <div id="kasFormBox" class="hidden bg-white p-5 rounded-xl border border-emerald-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 mb-3">Input Pembayaran Iuran Kas</h3>
+        <form id="formKas" onsubmit="saveKas(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Nama Warga / Blok *</label>
+            <input type="text" id="kasNama" required placeholder="Contoh: Budi (Blok A1/02)"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Periode Bulan *</label>
+            <input type="month" id="kasPeriode" required
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Nominal (Rp) *</label>
+            <input type="number" id="kasNominal" required value="50000" min="1000"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+          <div class="flex items-end gap-2">
+            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-4 py-2 rounded-lg">Simpan</button>
+            <button type="button" onclick="document.getElementById('kasFormBox').classList.add('hidden')" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg">Batal</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+            <tr>
+              <th class="px-4 py-3">Tanggal</th>
+              <th class="px-4 py-3">Nama Warga / Blok</th>
+              <th class="px-4 py-3">Periode</th>
+              <th class="px-4 py-3">Nominal</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 admin-only hidden">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyKas" class="divide-y divide-slate-200"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: LAYANAN SURAT -->
+    <section id="view-surat" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Form Pengajuan (Bisa diisi warga langsung) -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-fit">
+          <h2 class="font-bold text-slate-800 mb-1">Ajukan Surat Pengantar</h2>
+          <p class="text-xs text-slate-500 mb-4">Isi formulir di bawah untuk mengajukan surat ke pengurus RT.</p>
+          <form id="formSurat" onsubmit="saveSurat(event)" class="space-y-3 text-sm">
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Nama Pemohon *</label>
+              <input type="text" id="suratNama" required placeholder="Nama lengkap sesuai KTP"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Blok / Nomor Rumah *</label>
+              <input type="text" id="suratAlamat" required placeholder="Blok B3 No. 05"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Jenis Surat *</label>
+              <select id="suratJenis" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
+                <option value="Surat Pengantar KTP / KK">Surat Pengantar KTP / KK</option>
+                <option value="Surat Keterangan Domisili">Surat Keterangan Domisili</option>
+                <option value="Surat Keterangan Usaha (SKU)">Surat Keterangan Usaha (SKU)</option>
+                <option value="Surat Pengantar Nikah / SKCK">Surat Pengantar Nikah / SKCK</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-600 mb-1">Keperluan / Keterangan</label>
+              <textarea id="suratKeperluan" rows="2" placeholder="Contoh: Perpanjangan administrasi bank"
+                class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg transition">
+              Kirim Pengajuan
+            </button>
+          </form>
+        </div>
+
+        <!-- Daftar Status Pengajuan -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+          <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800">Daftar Pengajuan & Status</h3>
+            <span class="text-xs text-slate-500">Update real-time</span>
+          </div>
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+              <tr>
+                <th class="px-4 py-3">Tanggal</th>
+                <th class="px-4 py-3">Pemohon</th>
+                <th class="px-4 py-3">Jenis Surat</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3 admin-only hidden">Ubah Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbodySurat" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: PENGATURAN KONEKSI CLOUD -->
+    <section id="view-pengaturan" class="tab-view hidden max-w-2xl space-y-4">
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Koneksi Backend Google Sheets (Apps Script)</h2>
+          <p class="text-xs text-slate-500 mt-1">
+            Secara bawaan aplikasi berjalan menggunakan penyimpanan browser (LocalStorage). Tempel URL Web App Google Apps Script di bawah ini agar data tersimpan online di Google Sheets.
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">URL Google Apps Script Web App</label>
+          <input type="url" id="inputApiUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="saveApiConfig()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded-lg">
+            Simpan & Sinkronkan Data
+          </button>
+          <button onclick="resetApiConfig()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm px-4 py-2 rounded-lg">
+            Gunakan Mode Lokal
+          </button>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-1">
+          <p class="font-semibold text-slate-700">Catatan Deployment GitHub:</p>
+          <p>Anda juga dapat menaruh URL Apps Script secara permanen di dalam file <code class="bg-slate-200 px-1 rounded">app.js</code> pada variabel <code class="bg-slate-200 px-1 rounded">DEFAULT_API_URL</code> sebelum melakukan <em>git push</em>.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Login Pengurus -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-slate-900/50 z-40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-slate-800">Login Pengurus RT</h3>
+        <button onclick="toggleAdminModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500">Masukkan PIN Pengurus untuk mengelola data warga, kas, dan status surat. (PIN default: <strong>123456</strong>)</p>
+      <input type="password" id="adminPinInput" placeholder="Masukkan PIN..."
+        class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+      <div class="flex justify-end gap-2">
+        <button onclick="toggleAdminModal()" class="px-4 py-2 text-sm text-slate-600">Batal</button>
+        <button onclick="loginAdmin()" class="px-4 py-2 text-sm bg-emerald-700 text-white font-semibold rounded-lg">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    Sistem Informasi Warga RT • Siap Deploy via GitHub & Netlify/Vercel
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
