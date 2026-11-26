@@ -2,7 +2,7 @@
 // KONFIGURASI UTAMA APLIKASI WARGA
 // Tempel URL Web App Google Apps Script di bawah ini jika sudah dideploy:
 // =========================================================================
-const DEFAULT_API_URL = "";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzBlgcuEFrIrNcFU8mtyI_yAryqB6cY0FX58rMHCY4h-Dc5Eg87nNBx5jkN6ivEeO7HbA/exec";
 const ADMIN_PIN = "123456"; // Ubah PIN sesuai kebutuhan pengurus
 
 let state = {
